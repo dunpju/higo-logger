@@ -1,4 +1,4 @@
-package higo
+package logger
 
 import (
 	"fmt"
