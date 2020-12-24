@@ -24,15 +24,24 @@ func init() {
 
 type Logger struct {
 	*logrus.Logger
-	root string // 主目录
-	file string
+	root   string // 主目录
+	file   string
+	isInit bool
 }
 
 func New() *Logger {
 	return &Logger{Logger: logrus.New(), root: "", file: "log"}
 }
 
+func (this Logger) IsInit(isInit bool) Logger {
+	this.isInit = isInit
+	return this
+}
+
 func (this Logger) Init() {
+	if this.isInit {
+		return
+	}
 	// 日志文件
 	path := fmt.Sprintf("%sruntime%slogs", this.root, string(os.PathSeparator))
 
@@ -81,6 +90,7 @@ func (this Logger) Init() {
 
 	// Hook
 	Logrus.AddHook(lfHook)
+	this.isInit = true
 }
 
 func (this Logger) Root(path string) Logger {
