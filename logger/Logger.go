@@ -18,7 +18,6 @@ var once sync.Once
 
 func init() {
 	once.Do(func() {
-		// 实例化
 		Logrus = New()
 	})
 }
@@ -26,28 +25,24 @@ func init() {
 type Logger struct {
 	*logrus.Logger
 	root string // 主目录
+	file string
 }
 
 func New() *Logger {
-	// 默认当前目录
-	return &Logger{Logger: logrus.New(), root: ""}
+	return &Logger{Logger: logrus.New(), root: "", file: "log"}
 }
 
-func (this Logger) Root(path string) Logger {
-	this.root = path
-	return this
-}
-
-func (this Logger) Output(file string) Logger {
+func (this Logger) Init() {
 	// 日志文件
-	logs := fmt.Sprintf("%sruntime%slogs", this.root, string(os.PathSeparator))
+	path := fmt.Sprintf("%sruntime%slogs", this.root, string(os.PathSeparator))
 
 	// 目录不存在，并创建
-	if _, err := os.Stat(logs); os.IsNotExist(err) {
-		if os.Mkdir(logs, os.ModePerm) != nil {}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if os.Mkdir(path, os.ModePerm) != nil {
+		}
 	}
 
-	fileName := logs + fmt.Sprintf("%s%s", string(os.PathSeparator),file)
+	fileName := path + fmt.Sprintf("%s%s", string(os.PathSeparator), this.file)
 
 	// 设置日志级别
 	Logrus.SetLevel(logrus.DebugLevel)
@@ -61,7 +56,7 @@ func (this Logger) Output(file string) Logger {
 	// 设置 rotatelogs
 	logWriter, _ := rotatelogs.New(
 		// 分割后的文件名称
-		fileName + ".%Y%m%d.log",
+		fileName+".%Y%m%d.log",
 		// 生成软链，指向最新日志文件
 		rotatelogs.WithLinkName(fileName),
 		// 设置最大保存时间(7天)
@@ -81,23 +76,30 @@ func (this Logger) Output(file string) Logger {
 
 	lfHook := lfshook.NewHook(writeMap, &logrus.TextFormatter{
 		TimestampFormat: "2006-01-02 15:04:05",
-		FullTimestamp: true,
+		FullTimestamp:   true,
 	})
 
 	// Hook
 	Logrus.AddHook(lfHook)
+}
+
+func (this Logger) Root(path string) Logger {
+	this.root = path
+	return this
+}
+
+func (this Logger) File(file string) Logger {
+	this.file = file
 	return this
 }
 
 // 输出换行debug调用栈
-func PrintlnStack()  {
+func PrintlnStack() {
 	ds := fmt.Sprintf("%s", debug.Stack())
-	dss := strings.Split(ds,"\n")
+	dss := strings.Split(ds, "\n")
 	Logrus.Info(fmt.Sprintf("=== DEBUG STACK Bigin goroutine %d ===", utils.GoroutineID()))
 	for _, b := range dss {
-		Logrus.Info(strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%s", b), "\t"),"\n"))
+		Logrus.Info(strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%s", b), "\t"), "\n"))
 	}
 	Logrus.Info(fmt.Sprintf("=== DEBUG STACK End goroutine %d ===", utils.GoroutineID()))
 }
-
-
