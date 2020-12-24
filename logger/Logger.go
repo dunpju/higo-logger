@@ -33,12 +33,12 @@ func New() *Logger {
 	return &Logger{Logger: logrus.New(), root: "", file: "log"}
 }
 
-func (this Logger) IsInit(isInit bool) Logger {
+func (this *Logger) IsInit(isInit bool) *Logger {
 	this.isInit = isInit
 	return this
 }
 
-func (this Logger) Init() {
+func (this *Logger) Init() {
 	if this.isInit {
 		return
 	}
@@ -93,12 +93,12 @@ func (this Logger) Init() {
 	this.isInit = true
 }
 
-func (this Logger) Root(path string) Logger {
+func (this *Logger) Root(path string) *Logger {
 	this.root = path
 	return this
 }
 
-func (this Logger) File(file string) Logger {
+func (this *Logger) File(file string) *Logger {
 	this.file = file
 	return this
 }
