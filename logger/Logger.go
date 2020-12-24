@@ -14,6 +14,11 @@ import (
 
 var Logrus *logrus.Logger
 
+func init() {
+	// 实例化
+	Logrus = logrus.New()
+}
+
 func Log(root string, pathSeparator string)  {
 	// 日志文件
 	logs := root + fmt.Sprintf("runtime%slogs", pathSeparator)
@@ -24,9 +29,6 @@ func Log(root string, pathSeparator string)  {
 	}
 
 	fileName := logs + fmt.Sprintf("%shigo", pathSeparator)
-
-	// 实例化
-	Logrus = logrus.New()
 
 	/**
 	// 写入文件
