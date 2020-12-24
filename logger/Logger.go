@@ -9,38 +9,45 @@ import (
 	"os"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 )
 
-var Logrus *logrus.Logger
+var Logrus *Logger
+var once sync.Once
 
 func init() {
-	// 实例化
-	Logrus = logrus.New()
+	once.Do(func() {
+		// 实例化
+		Logrus = New()
+	})
 }
 
-func Log(root string, pathSeparator string)  {
+type Logger struct {
+	*logrus.Logger
+	root string // 主目录
+}
+
+func New() *Logger {
+	// 默认当前目录
+	return &Logger{Logger: logrus.New(), root: ""}
+}
+
+func (this Logger) Root(path string) Logger {
+	this.root = path
+	return this
+}
+
+func (this Logger) Output(file string) Logger {
 	// 日志文件
-	logs := root + fmt.Sprintf("runtime%slogs", pathSeparator)
+	logs := fmt.Sprintf("%sruntime%slogs", this.root, string(os.PathSeparator))
 
 	// 目录不存在，并创建
 	if _, err := os.Stat(logs); os.IsNotExist(err) {
 		if os.Mkdir(logs, os.ModePerm) != nil {}
 	}
 
-	fileName := logs + fmt.Sprintf("%shigo", pathSeparator)
-
-	/**
-	// 写入文件
-	src, _ := os.Create(fileName)
-	src, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
-	if err != nil {
-		fmt.Println("err", err)
-	}
-
-	// 设置输出
-	Logrus.Out = src
-	*/
+	fileName := logs + fmt.Sprintf("%s%s", string(os.PathSeparator),file)
 
 	// 设置日志级别
 	Logrus.SetLevel(logrus.DebugLevel)
@@ -55,13 +62,10 @@ func Log(root string, pathSeparator string)  {
 	logWriter, _ := rotatelogs.New(
 		// 分割后的文件名称
 		fileName + ".%Y%m%d.log",
-
 		// 生成软链，指向最新日志文件
 		rotatelogs.WithLinkName(fileName),
-
 		// 设置最大保存时间(7天)
 		rotatelogs.WithMaxAge(7*24*time.Hour),
-
 		// 设置日志切割时间间隔(1天)
 		rotatelogs.WithRotationTime(24*time.Hour),
 	)
@@ -80,8 +84,9 @@ func Log(root string, pathSeparator string)  {
 		FullTimestamp: true,
 	})
 
-	// 新增 Hook
+	// Hook
 	Logrus.AddHook(lfHook)
+	return this
 }
 
 // 输出换行debug调用栈
