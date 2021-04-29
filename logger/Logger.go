@@ -1,13 +1,13 @@
 package logger
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/dengpju/higo-utils/utils"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"os"
-	"strings"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -102,12 +102,23 @@ func (this *Logger) File(file string) *Logger {
 	return this
 }
 
-// 输出换行debug调用栈
-func PrintlnStack(stack []byte) {
-	dss := strings.Split(string(stack), "\n")
-	Logrus.Info(fmt.Sprintf("=== DEBUG STACK Bigin goroutine %d ===", utils.GoroutineID()))
-	for _, b := range dss {
-		Logrus.Info(strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%s", b), "\t"), "\n"))
+// 记录
+func LoggerStack(err interface{}, goroutineID uint64) {
+	Logrus.Info(PrintStackTrace(err, goroutineID))
+}
+
+// 打印堆栈信息
+func PrintStackTrace(err interface{}, goroutineID uint64) string {
+	buf := new(bytes.Buffer)
+	_, _ = fmt.Fprintf(buf, "=== DEBUG STACK Bigin goroutine id %d ===\n", goroutineID)
+	_, _ = fmt.Fprintf(buf, "%v\n", err)
+	for i := 1; ; i++ {
+		pc, file, line, ok := runtime.Caller(i)
+		if !ok {
+			break
+		}
+		_, _ = fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
 	}
-	Logrus.Info(fmt.Sprintf("=== DEBUG STACK End goroutine %d ===", utils.GoroutineID()))
+	_, _ = fmt.Fprintf(buf, "=== DEBUG STACK End goroutine id %d ===\n", goroutineID)
+	return buf.String()
 }
