@@ -7,7 +7,6 @@ import (
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"os"
-	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -104,9 +103,8 @@ func (this *Logger) File(file string) *Logger {
 }
 
 // 输出换行debug调用栈
-func PrintlnStack() {
-	ds := fmt.Sprintf("%s", debug.Stack())
-	dss := strings.Split(ds, "\n")
+func PrintlnStack(stack []byte) {
+	dss := strings.Split(string(stack), "\n")
 	Logrus.Info(fmt.Sprintf("=== DEBUG STACK Bigin goroutine %d ===", utils.GoroutineID()))
 	for _, b := range dss {
 		Logrus.Info(strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%s", b), "\t"), "\n"))
