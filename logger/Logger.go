@@ -104,21 +104,33 @@ func (this *Logger) File(file string) *Logger {
 
 // 记录
 func LoggerStack(err interface{}, goroutineID uint64) {
-	Logrus.Info(PrintStackTrace(err, goroutineID))
+	_, s := PrintStackTrace(err, goroutineID)
+	for i := 0; i < len(s); i++ {
+		Logrus.Info(s[i])
+	}
 }
 
 // 打印堆栈信息
-func PrintStackTrace(err interface{}, goroutineID uint64) string {
+func PrintStackTrace(err interface{}, goroutineID uint64) (string, []string) {
+	sliceString := make([]string, 0)
 	buf := new(bytes.Buffer)
-	_, _ = fmt.Fprintf(buf, "=== DEBUG STACK Bigin goroutine id %d ===\n", goroutineID)
-	_, _ = fmt.Fprintf(buf, "%v\n", err)
+	s := fmt.Sprintf("=== DEBUG STACK Bigin goroutine id %d ===", goroutineID)
+	sliceString = append(sliceString, s)
+	_, _ = fmt.Fprintf(buf, s+"\n")
+	s = fmt.Sprintf("%v", err)
+	sliceString = append(sliceString, s)
+	_, _ = fmt.Fprintf(buf, s+"\n")
 	for i := 1; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
 			break
 		}
-		_, _ = fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
+		s = fmt.Sprintf("%s:%d (0x%x)", file, line, pc)
+		sliceString = append(sliceString, s)
+		_, _ = fmt.Fprintf(buf, s+"\n")
 	}
-	_, _ = fmt.Fprintf(buf, "=== DEBUG STACK End goroutine id %d ===\n", goroutineID)
-	return buf.String()
+	s = fmt.Sprintf("=== DEBUG STACK End goroutine id %d ===", goroutineID)
+	_, _ = fmt.Fprintf(buf, s+"\n")
+	sliceString = append(sliceString, s)
+	return buf.String(), sliceString
 }
