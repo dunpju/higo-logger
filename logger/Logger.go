@@ -12,8 +12,14 @@ import (
 	"time"
 )
 
-var Logrus *Logger
-var once sync.Once
+const (
+	Eof = "EOFEOF"
+)
+
+var (
+	Logrus *Logger
+	once   sync.Once
+)
 
 func init() {
 	once.Do(func() {
@@ -104,21 +110,29 @@ func (this *Logger) File(file string) *Logger {
 
 // 记录
 func LoggerStack(err interface{}, goroutineID uint64) {
-	_, s := PrintStackTrace(err, goroutineID)
-	for i := 0; i < len(s); i++ {
-		Logrus.Info(s[i])
-	}
+	strChan := make(chan string, 100)
+	PrintStackTrace(err, goroutineID, strChan)
+	go func(strChan chan string) {
+		for {
+			select {
+			case v := <-strChan:
+				if Eof == v {
+					break
+				}
+				Logrus.Info(v)
+			}
+		}
+	}(strChan)
 }
 
 // 打印堆栈信息
-func PrintStackTrace(err interface{}, goroutineID uint64) (string, []string) {
-	sliceString := make([]string, 0)
+func PrintStackTrace(err interface{}, goroutineID uint64, strChan chan string) string {
 	buf := new(bytes.Buffer)
 	s := fmt.Sprintf("=== DEBUG STACK Bigin goroutine id %d ===", goroutineID)
-	sliceString = append(sliceString, s)
+	strChan <- s
 	_, _ = fmt.Fprintf(buf, s+"\n")
 	s = fmt.Sprintf("%v", err)
-	sliceString = append(sliceString, s)
+	strChan <- s
 	_, _ = fmt.Fprintf(buf, s+"\n")
 	for i := 1; ; i++ {
 		pc, file, line, ok := runtime.Caller(i)
@@ -126,11 +140,12 @@ func PrintStackTrace(err interface{}, goroutineID uint64) (string, []string) {
 			break
 		}
 		s = fmt.Sprintf("%s:%d (0x%x)", file, line, pc)
-		sliceString = append(sliceString, s)
+		strChan <- s
 		_, _ = fmt.Fprintf(buf, s+"\n")
 	}
 	s = fmt.Sprintf("=== DEBUG STACK End goroutine id %d ===", goroutineID)
 	_, _ = fmt.Fprintf(buf, s+"\n")
-	sliceString = append(sliceString, s)
-	return buf.String(), sliceString
+	strChan <- s
+	strChan <- Eof
+	return buf.String()
 }
