@@ -3,7 +3,7 @@ module github.com/dengpju/higo-logger
 go 1.14
 
 require (
-	github.com/dengpju/higo-utils v0.0.0-20201128143226-0d83b781389a
+	github.com/dengpju/higo-utils v1.0.80
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect

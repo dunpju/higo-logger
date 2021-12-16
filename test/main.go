@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/dengpju/higo-logger/logger"
-	"github.com/dengpju/higo-utils/utils"
+	"github.com/dengpju/higo-utils/utils/runtimeutil"
 )
 
 func main()  {
@@ -11,7 +11,7 @@ func main()  {
 
 		if r := recover(); r != nil {
 			fmt.Println("recover...:", r)
-			logger.LoggerStack(r, utils.GoroutineID())
+			logger.LoggerStack(r, runtimeutil.GoroutineID())
 		}
 	}()
 	logger.Logrus.Init()
