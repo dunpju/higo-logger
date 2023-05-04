@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/dengpju/higo-logger/logger"
-	"github.com/dengpju/higo-utils/utils/runtimeutil"
+	"github.com/dunpju/higo-logger/logger"
+	"github.com/dunpju/higo-utils/utils/runtimeutil"
 )
 
-func main()  {
-	defer func(){
-
+func main() {
+	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("recover...:", r)
-			logger.LoggerStack(r, runtimeutil.GoroutineID())
+			id, _ := runtimeutil.GoroutineID()
+			logger.LoggerStack(r, id)
 		}
 	}()
 	logger.Logrus.Init()

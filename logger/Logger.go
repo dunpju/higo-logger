@@ -110,19 +110,17 @@ func (this *Logger) File(file string) *Logger {
 
 // 记录
 func LoggerStack(err interface{}, goroutineID uint64) {
-	strChan := make(chan string, 100)
+	strChan := make(chan string, 1000)
 	PrintStackTrace(err, goroutineID, strChan)
-	go func(strChan chan string) {
-		for {
-			select {
-			case v := <-strChan:
-				if Eof == v {
-					break
-				}
-				Logrus.Info(v)
+	for {
+		select {
+		case v := <-strChan:
+			if Eof == v {
+				break
 			}
+			Logrus.Info(v)
 		}
-	}(strChan)
+	}
 }
 
 // 打印堆栈信息
