@@ -112,15 +112,17 @@ func (this *Logger) File(file string) *Logger {
 func LoggerStack(err interface{}, goroutineID uint64) {
 	strChan := make(chan string, 1000)
 	PrintStackTrace(err, goroutineID, strChan)
-	for {
-		select {
-		case v := <-strChan:
-			if Eof == v {
-				break
+	go func() {
+		for {
+			select {
+			case v := <-strChan:
+				if Eof == v {
+					break
+				}
+				Logrus.Info(v)
 			}
-			Logrus.Info(v)
 		}
-	}
+	}()
 }
 
 // 打印堆栈信息
