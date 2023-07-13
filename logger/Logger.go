@@ -109,18 +109,17 @@ func (this *Logger) File(file string) *Logger {
 }
 
 // 记录
-func LoggerStack(err interface{}, goroutineID uint64) {
-	strChan := make(chan string, 1000)
+func LoggerStack(err interface{}, goroutineID uint64, outChan ...chan string) {
+	var strChan chan string
+	if len(outChan) > 0 {
+		strChan = outChan[0]
+	} else {
+		strChan = make(chan string, 1000)
+	}
 	PrintStackTrace(err, goroutineID, strChan)
 	go func() {
-		for {
-			select {
-			case v := <-strChan:
-				if Eof == v {
-					break
-				}
-				Logrus.Info(v)
-			}
+		for v := range strChan {
+			Logrus.Info(v)
 		}
 	}()
 }
@@ -146,6 +145,6 @@ func PrintStackTrace(err interface{}, goroutineID uint64, strChan chan string) s
 	s = fmt.Sprintf("=== DEBUG STACK End goroutine id %d ===", goroutineID)
 	_, _ = fmt.Fprintf(buf, s+"\n")
 	strChan <- s
-	strChan <- Eof
+	close(strChan)
 	return buf.String()
 }
